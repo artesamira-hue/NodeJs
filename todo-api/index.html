@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Todo App</title>
+
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js">
+    </script>
+
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js">
+    </script>
+
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js">
+    </script>
+
+    <!-- Material UI -->
+    <script src="https://unpkg.com/@mui/material@5.15.20/umd/material-ui.development.js">
+    </script>
+</head>
+
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+
+        const {
+            Container,
+            Paper,
+            Typography,
+            TextField,
+            Button,
+            List,
+            ListItem,
+            ListItemText,
+            Checkbox,
+            IconButton,
+            Box,
+            Select,
+            MenuItem,
+            FormControl,
+            InputLabel,
+            TablePagination,
+        } = MaterialUI;
+
+
+        function App() {
+
+            const [todos, setTodos] = React.useState([]);
+            const [title, setTitle] = React.useState("");
+            const [search, setSearch] = React.useState("")
+            const [filter, setFilter] = React.useState("all")
+            const [rowsPerPage, setRowsPerPage] = React.useState(10)
+            const [pageNumber, setPageNumber] = React.useState(0)
+            const [total, setTotal] = React.useState(0);
+
+
+            // GET /todo
+            const getTodos = async (
+                searchValue = search,
+                filterValue = filter,
+                pageValue = pageNumber,
+                limitValue = rowsPerPage
+            ) => {
+                try {
+                    const params = new URLSearchParams();
+
+                    if (searchValue.trim()) {
+                        params.append("search", searchValue);
+                    }
+
+                    if (filterValue !== "all") {
+                        params.append(
+                            "completed",
+                            filterValue === "completed"
+                        );
+                    }
+
+                    // API page starts from 1
+                    params.append("page", pageValue + 1);
+                    params.append("limit", limitValue);
+
+                    const response = await fetch(
+                        `http://localhost:8000/todo?${params.toString()}`
+                    );
+
+                    const data = await response.json();
+
+                    setTodos(data.todos);
+                    setTotal(data.total);
+
+                } catch (error) {
+                    console.log(error);
+                }
+            };
+
+            // POST /todo
+            const addTodo = async () => {
+
+                if (!title.trim()) return;
+
+                try {
+
+                    const response = await fetch(
+                        "http://localhost:8000/todo",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+
+                            body: JSON.stringify({
+                                title: title,
+                                completed: false
+                            })
+                        }
+                    );
+
+                    const newTodo = await response.json();
+
+                    setTodos([...todos, newTodo]);
+
+                    setTitle("");
+
+                } catch (error) {
+
+                    console.log(error);
+
+                }
+            };
+
+
+            // PUT /todo/:id
+            const toggleTodo = async (todo) => {
+
+                try {
+
+                    const response = await fetch(
+                        `http://localhost:8000/todo/${todo._id}`,
+                        {
+                            method: "PUT",
+
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+
+                            body: JSON.stringify({
+                                completed: !todo.completed
+                            })
+                        }
+                    );
+
+                    const updatedTodo = await response.json();
+
+                    setTodos(
+                        todos.map((item) =>
+                            item._id === updatedTodo._id
+                                ? updatedTodo
+                                : item
+                        )
+                    );
+
+                } catch (error) {
+
+                    console.log(error);
+
+                }
+            };
+
+
+            // DELETE /todo/:id
+            const deleteTodo = async (id) => {
+
+                try {
+
+                    await fetch(
+                        `http://localhost:8000/todo/${id}`,
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+                    setTodos(
+                        todos.filter((item) => item._id !== id)
+                    );
+
+                } catch (error) {
+
+                    console.log(error);
+
+                }
+            };
+
+            const handleSearch = (e) => {
+                const value = e.target.value;
+
+                setSearch(value);
+
+                getTodos(value, filter);
+            };
+
+            const handleFilter = (e) => {
+                const value = e.target.value;
+
+                setFilter(value);
+
+                getTodos(search, value);
+            };
+
+            // Load todos when page opens
+            React.useEffect(() => {
+
+                getTodos();
+
+            }, []);
+
+
+            return (
+
+                <Container maxWidth="sm" sx={{ mt: 5 }}>
+
+                    <Paper sx={{ p: 3 }}>
+
+                        <Typography
+                            variant="h4"
+                            align="center"
+                            sx={{ mb: 3 }}
+                        >
+                            Todo List
+                        </Typography>
+
+                        {/* Search + Filter */}
+                        <Box
+                            sx={{
+                                display: "flex",
+                                gap: 2,
+                                mb: 3
+                            }}
+                        >
+                            {/* Search */}
+                            <TextField
+                                fullWidth
+                                label="Search Todo"
+                                placeholder="Search by title"
+                                value={search}
+                                onChange={handleSearch}
+                            />
+
+                            {/* Filter */}
+                            <FormControl fullWidth>
+                                <InputLabel>Filter</InputLabel>
+
+                                <Select
+                                    value={filter}
+                                    label="Filter"
+                                    onChange={handleFilter}
+                                >
+                                    <MenuItem value="all">All</MenuItem>
+
+                                    <MenuItem value="completed">
+                                        Complete
+                                    </MenuItem>
+
+                                    <MenuItem value="incomplete">
+                                        InComplete
+                                    </MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Box>
+
+
+                        {/* Add Todo */}
+                        <Box
+                            sx={{
+                                display: "flex",
+                                gap: 2,
+                                mb: 3
+                            }}
+                        >
+
+                            <TextField
+                                fullWidth
+                                label="Enter todo"
+                                value={title}
+                                onChange={(e) =>
+                                    setTitle(e.target.value)
+                                }
+                                onKeyDown={(e) => {
+
+                                    if (e.key === "Enter") {
+                                        addTodo();
+                                    }
+
+                                }}
+                            />
+
+                            <Button
+                                variant="contained"
+                                onClick={addTodo}
+                            >
+                                Add
+                            </Button>
+
+                        </Box>
+
+
+                        {/* Todo List */}
+                        <List>
+
+                            {todos.map((todo) => (
+
+                                <ListItem
+                                    key={todo._id}
+                                    divider
+
+                                    secondaryAction={
+
+                                        <IconButton
+                                            onClick={() =>
+                                                deleteTodo(todo._id)
+                                            }
+                                        >
+                                            🗑️
+                                        </IconButton>
+
+                                    }
+                                >
+
+                                    <Checkbox
+                                        checked={todo.completed}
+                                        onChange={() =>
+                                            toggleTodo(todo)
+                                        }
+                                    />
+
+
+                                    <ListItemText
+                                        primary={todo.title}
+                                        sx={{
+                                            textDecoration:
+                                                todo.completed
+                                                    ? "line-through"
+                                                    : "none"
+                                        }}
+                                    />
+
+                                </ListItem>
+
+                            ))}
+
+                        </List>
+
+                        <Box
+                            sx={{
+                                display: "flex",
+                                gap: 2,
+                                mb: 3
+                            }}
+                        >
+                            <TablePagination
+                                component="div"
+                                count={total}
+                                page={pageNumber}
+                                rowsPerPage={rowsPerPage}
+                                onPageChange={(event, newPage) => {
+                                    setPageNumber(newPage);
+
+                                    getTodos(
+                                        search,
+                                        filter,
+                                        newPage,
+                                        rowsPerPage
+                                    );
+                                }}
+                                onRowsPerPageChange={(event) => {
+                                    const newLimit = parseInt(event.target.value, 10);
+
+                                    setRowsPerPage(newLimit);
+                                    setPageNumber(0);
+
+                                    getTodos(
+                                        search,
+                                        filter,
+                                        0,
+                                        newLimit
+                                    );
+                                }}
+                            />
+                        </Box>
+
+                    </Paper>
+
+                </Container>
+
+            );
+
+        }
+
+
+        const root = ReactDOM.createRoot(
+            document.getElementById("root")
+        );
+
+        root.render(<App />);
+
+    </script>
+
+</body>
+
+</html>

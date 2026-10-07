@@ -1,0 +1,95 @@
+How to create node.js project
+
+create a folder open cmd for it
+npm init -y (this creates a package.json)
+then creates index.js(write console.log('Hello World'))
+inside package.json(add "start": "node index.js" inside scripts)
+in cmd run (node index.js)(output- 'Hello World')
+
+If you want to create an Express project
+npm install express
+Your project becomes:
+
+node-project/
+│
+├── node_modules/
+├── package-lock.json
+├── package.json
+└── index.js
+
+index.js
+const express = require("express");
+
+const app = express();
+
+app.use(express.json());
+
+app.get("/", (req, res) => {
+    res.send("Hello Express");
+});
+
+app.listen(8000, () => {
+    console.log("Server running on port 8000");
+});
+
+Start the server
+node index.js
+
+Then open:
+http://localhost:8000
+
+You should get:
+Hello Express
+-----------------------------------------------------------------------------------------------
+
+What is Node.js?
+Node.js
+   ↓
+Provides an environment to run JavaScript
+
+Node.js is a runtime environment that allows JavaScript to run outside the browser.
+-----------------------------------------------------------------------------------------
+why do we need Nodejs
+We need Node.js mainly because JavaScript by itself needs an environment to run.
+
+You already know that JavaScript runs in the browser. But what if we want to use JavaScript outside the browser, especially for backend work?
+-------------------------------------------------------------------------------------------------------
+What does "JavaScript runs in the browser" mean?
+
+When you open a website:
+Chrome has a JavaScript engine (V8 in Chrome).
+It reads the JavaScript code and executes it.
+For example:
+alert("Hello");
+
+Chrome executes that code and shows:
+┌───────────────┐
+│ Hello         │
+│      OK       │
+└───────────────┘
+So the browser is the place where the JavaScript code is executed.
+-------------------------------------------------------------------------------------------------
+Why can't JavaScript normally do everything?
+
+The browser intentionally limits what JavaScript can access.
+
+For example, a website shouldn't be able to freely say:
+"Give me all the files on this person's computer."
+
+That would be dangerous.
+
+So the browser gives JavaScript controlled access to things like:
+Buttons
+Text fields
+HTML
+Browser storage
+User clicks
+Network requests
+
+Now Node.js makes more sense
+
+Node.js basically says:
+"Let's take JavaScript out of the browser and let it run on a computer/server."
+
+so browser and nodejs both are enviromemts to run javascript
+The difference is that each environment provides different capabilities.
